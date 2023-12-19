@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ @package     Abandoned Cart Plugin
+  ~ @version     __DEPLOY_VERSION__
+  ~ @author      Delo Design - delo-design.ru
+  ~ @copyright   Copyright (c) 2023 Delo Design. All rights reserved.
+  ~ @license     GNU/GPL license: https://www.gnu.org/copyleft/gpl.html
+  ~ @link        https://delo-design.ru/
+  -->
+
+<extension version="3.9" type="plugin" group="radicalmart" method="upgrade">
+	<name>PLG_RADICALMART_ABANDONED_CART</name>
+	<author>Alex</author>
+	<creationDate>December 2023</creationDate>
+	<copyright>Copyright © 2023 Delo Design. All rights reserved.</copyright>
+	<license>https://www.gnu.org/copyleft/gpl.html GNU/GPL</license>
+	<authorEmail>Alexlialin@mail.ru</authorEmail>
+	<authorUrl>https://delo-design.ru</authorUrl>
+	<version>0.0.1-dev</version>
+	<description>PLG_RADICALMART_ABANDONED_CART_DESCRIPTION</description>
+	<namespace path="src">Joomla\Plugin\RadicalMart\AbandonedCart</namespace>
+	<scriptfile>script.php</scriptfile>
+	<languages folder="language">
+		<language tag="en-GB">en-GB/plg_radicalmart_abandoned_cart.ini</language>
+		<language tag="en-GB">en-GB/plg_radicalmart_abandoned_cart.sys.ini</language>
+		<language tag="ru-RU">ru-RU/plg_radicalmart_abandoned_cart.ini</language>
+		<language tag="ru-RU">ru-RU/plg_radicalmart_abandoned_cart.sys.ini</language>
+	</languages>
+	<files>
+		<folder>services</folder>
+		<folder plugin="abandoned_cart">src</folder>
+	</files>
+</extension>
