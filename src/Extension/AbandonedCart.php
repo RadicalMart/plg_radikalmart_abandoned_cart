@@ -10,6 +10,7 @@
 
 namespace Joomla\Plugin\RadicalMart\AbandonedCart\Extension;
 
+use Joomla\CMS\Form\Form;
 use Joomla\CMS\Plugin\CMSPlugin;
 use Joomla\Event\SubscriberInterface;
 use Joomla\Plugin\RadicalMart\AbandonedCart\Console\SendingLetterCommand;
@@ -45,8 +46,26 @@ class AbandonedCart extends CMSPlugin implements SubscriberInterface
 	public static function getSubscribedEvents(): array
 	{
 		return [
-			'onRadicalMartRegisterCLICommands' => 'onRadicalMartRegisterCLICommands'
+			'onRadicalMartPrepareConfigForm'   => 'onRadicalMartPrepareConfigForm',
+			'onRadicalMartRegisterCLICommands' => 'onRadicalMartRegisterCLICommands',
+			'onRadicalMartPrepareForm'         => 'onRadicalMartPrepareForm',
+			'onRadicalMartBeforeOrderSave'     => 'onRadicalMartBeforeOrderSave'
 		];
+	}
+
+	/**
+	 * Add email config form to RadicalMart.
+	 *
+	 * @param   Form   $form  The form to be altered.
+	 * @param   mixed  $data  The associated data for the form.
+	 *
+	 * @throws  \Exception
+	 *
+	 * @since  1.1.0
+	 */
+	public function onRadicalMartPrepareConfigForm(Form $form, $data = [])
+	{
+		$form->loadFile(JPATH_PLUGINS . '/radicalmart/abandoned_cart/forms/radicalmart.xml');
 	}
 
 	/**
@@ -60,5 +79,43 @@ class AbandonedCart extends CMSPlugin implements SubscriberInterface
 	public function onRadicalMartRegisterCLICommands(array &$commands, Registry $params)
 	{
 		$commands[] = SendingLetterCommand::class;
+	}
+
+	/**
+	 * Method to add fields to form.
+	 *
+	 * @param   Form   $form  The form to be altered.
+	 * @param   mixed  $data  The associated data for the form.
+	 *
+	 * @throws \Exception
+	 *
+	 * @since __DEPLOY_VERSION__
+	 */
+	public function onRadicalMartPrepareForm(Form $form, $data = [])
+	{
+		$formName = $form->getName();
+
+		if ($formName === 'com_radicalmart.cart')
+		{
+			$form->loadFile(JPATH_PLUGINS . '/radicalmart/abandoned_cart/forms/com_radicalmart.cart.xml');
+		}
+		elseif ($formName === 'com_radicalmart.order')
+		{
+			$form->loadFile(JPATH_PLUGINS . '/radicalmart/abandoned_cart/forms/com_radicalmart.order.xml');
+		}
+	}
+
+	public function onRadicalMartBeforeOrderSave($context, &$data, $formData, $products, $shipping, $payment, $currency, $isNew)
+	{
+		if ($isNew && !empty($formData['plugins']['abandoned_cart']))
+		{
+			if (!isset($data['plugins']))
+			{
+				$data['plugins'] = '';
+			}
+			$data['plugins'] = new Registry($data['plugins']);
+			$data['plugins']->set('abandoned_cart', $formData['plugins']['abandoned_cart']);
+			$data['plugins'] = $data['plugins']->toString();
+		}
 	}
 }

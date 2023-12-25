@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form addfieldprefix="Joomla\Component\RadicalMart\Administrator\Field">
+	<fieldset name="general_abandoned_cart" label="PLG_RADICALMART_ABANDONED_CART_FIELDSET">
+		<field name="abandoned_cart_subject" type="text"
+			   label="PLG_RADICALMART_ABANDONED_CART_PARAMS_SUBJECT"
+			   default="PLG_RADICALMART_ABANDONED_CART_SUBJECT"/>
+		<field name="abandoned_cart_timeout" type="text"
+			   label="PLG_RADICALMART_ABANDONED_CART_PARAMS_TIMEOUT"
+			   default="7"/>
+	</fieldset>
+</form>

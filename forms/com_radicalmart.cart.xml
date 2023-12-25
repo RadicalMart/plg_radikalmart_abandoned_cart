@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form addfieldprefix="Joomla\Component\RadicalMart\Administrator\Field">
+	<fieldset name="sidebar_abandoned_cart" label="PLG_RADICALMART_ABANDONED_CART_FIELDSET">
+		<fields name="plugins">
+			<field name="abandoned_cart" type="calendar"
+				   label="PLG_RADICALMART_ABANDONED_CART_FIELD"
+				   readonly="true"
+				   filter="user_utc"
+				   showtime="true"
+				   translateformat="true"/>
+		</fields>
+	</fieldset>
+</form>

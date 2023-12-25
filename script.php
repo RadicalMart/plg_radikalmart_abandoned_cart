@@ -12,13 +12,18 @@
 
 use Joomla\CMS\Application\AdministratorApplication;
 use Joomla\CMS\Factory;
+use Joomla\CMS\Installer\Installer;
 use Joomla\CMS\Installer\InstallerAdapter;
 use Joomla\CMS\Installer\InstallerScriptInterface;
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\Log\Log;
 use Joomla\CMS\Version;
 use Joomla\Database\DatabaseDriver;
 use Joomla\DI\Container;
 use Joomla\DI\ServiceProviderInterface;
+use Joomla\Filesystem\File;
+use Joomla\Filesystem\Folder;
+use Joomla\Filesystem\Path;
 
 return new class () implements ServiceProviderInterface {
 	public function register(Container $container)
@@ -178,6 +183,18 @@ return new class () implements ServiceProviderInterface {
 					}
 				}
 
+				$installer = $adapter->getParent();
+				if ($type !== 'uninstall')
+				{
+					// Parse layouts
+					$this->parseLayouts($installer->getManifest()->layouts, $installer);
+				}
+				else
+				{
+					// Remove layouts
+					$this->removeLayouts($installer->getManifest()->layouts);
+				}
+
 				return true;
 			}
 
@@ -233,6 +250,111 @@ return new class () implements ServiceProviderInterface {
 
 				// Update record
 				$this->db->updateObject('#__extensions', $plugin, ['type', 'element', 'folder']);
+			}
+			/**
+			 * Method to parse through a layouts element of the installation manifest and take appropriate action.
+			 *
+			 * @param   SimpleXMLElement|null  $element    The XML node to process.
+			 * @param   Installer|null         $installer  Installer calling object.
+			 *
+			 * @return  bool  True on success.
+			 *
+			 * @since  1.2.0
+			 */
+			public function parseLayouts(SimpleXMLElement $element = null, Installer $installer = null): bool
+			{
+				if (!$element || !count($element->children()))
+				{
+					return false;
+				}
+
+				// Get destination
+				$folder      = ((string) $element->attributes()->destination) ? '/' . $element->attributes()->destination : null;
+				$destination = Path::clean(JPATH_ROOT . '/layouts' . $folder);
+
+				// Get source
+				$folder = (string) $element->attributes()->folder;
+				$source = ($folder && file_exists($installer->getPath('source') . '/' . $folder))
+					? $installer->getPath('source') . '/' . $folder : $installer->getPath('source');
+
+				// Prepare files
+				$copyFiles = [];
+				foreach ($element->children() as $file)
+				{
+					$path['src']  = Path::clean($source . '/' . $file);
+					$path['dest'] = Path::clean($destination . '/' . $file);
+
+					// Is this path a file or folder?
+					$path['type'] = $file->getName() === 'folder' ? 'folder' : 'file';
+					if (basename($path['dest']) !== $path['dest'])
+					{
+						$newdir = dirname($path['dest']);
+						if (!Folder::create($newdir))
+						{
+							Log::add(Text::sprintf('JLIB_INSTALLER_ERROR_CREATE_DIRECTORY', $newdir), Log::WARNING, 'jerror');
+
+							return false;
+						}
+					}
+
+					$copyFiles[] = $path;
+				}
+
+				return $installer->copyFiles($copyFiles, true);
+			}
+
+			/**
+			 * Method to parse through a layouts element of the installation manifest and remove the files that were installed.
+			 *
+			 * @param   SimpleXMLElement|null  $element  The XML node to process.
+			 *
+			 * @return  bool  True on success.
+			 *
+			 * @since  1.2.0
+			 */
+			protected function removeLayouts(SimpleXMLElement $element = null): bool
+			{
+				if (!$element || !count($element->children()))
+				{
+					return false;
+				}
+
+				// Get the array of file nodes to process
+				$files = $element->children();
+
+				// Get source
+				$folder = ((string) $element->attributes()->destination) ? '/' . $element->attributes()->destination : null;
+				$source = Path::clean(JPATH_ROOT . '/layouts' . $folder);
+
+				// Process each file in the $files array (children of $tagName).
+				foreach ($files as $file)
+				{
+					$path = Path::clean($source . '/' . $file);
+
+					// Actually delete the files/folders
+					if (is_dir($path))
+					{
+						$val = Folder::delete($path);
+					}
+					else
+					{
+						$val = File::delete($path);
+					}
+
+					if ($val === false)
+					{
+						Log::add('Failed to delete ' . $path, Log::WARNING, 'jerror');
+
+						return false;
+					}
+				}
+
+				if (!empty($folder))
+				{
+					Folder::delete($source);
+				}
+
+				return true;
 			}
 		});
 	}
