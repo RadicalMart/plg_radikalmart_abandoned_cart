@@ -219,11 +219,6 @@ class SendingLetterCommand extends AbstractCommand
 				continue;
 			}
 
-			if ($email !== 'AlexLialin@mail.ru')
-			{
-				continue;
-			}
-
 			$date = $cart->data['modified'];
 
 			if (!empty($cart->data['plugins']['abandoned_cart']))
@@ -231,11 +226,6 @@ class SendingLetterCommand extends AbstractCommand
 				$date = $cart->data['plugins']['abandoned_cart'];
 			}
 
-			/*
-			 * Сегодня 15 число
-			 * Корзина 12 число
-			 * timeout 8 число
-			 */
 			$date = (new Date($date))->toUnix();
 
 			if ($date > $timeout)
